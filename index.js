@@ -3,7 +3,7 @@
   [X]  HTTPS GET Request
   [ ]  read response headers
         search for "found BT"
-  [ ]  "HOOK" mozilla password manager
+  [ ]  "HOOK" mozilla password/login manager
 
 */
 
