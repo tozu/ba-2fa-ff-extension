@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="panel.css" />
+    <script type="text/javascript" src="controls.js"></script>
+    <script type="text/javascript" src="../lib/clientLogic.js"></script>
+  </head>
+  <body>
+    <h3>Bluetooth Proximity Extension</h3>
+    <!-- IP & Port -->
+    <div id="ip_container">
+      <!-- IP -->
+      <p id="textIP">IP:</p>
+      <input id="editIP" type="text" width="100%" value="127.0.0.1" />
+      <!-- Port -->
+      <p id="textPort">Port:</p>
+      <input id="editPort" type="text" width="100%" value="4567" />
+    </div>
+    <br>
+    <!-- Time interval -->
+    <div id="time_container">
+        <p id="textTime">Time Interval: </p>
+        <input id="slTime" type="range" min="1" max="240" value="120" onChange="updateSlider(this.value)" />
+        <p id="chosenTime">30m</p>
+    </div>
+    <br>
+    <!-- Security Level -->
+    <div id="level_container">
+      Security Level:
+      <select id="level">
+        <option value="lvl1">(1) Proximity Detection</option>
+        <option value="lvl2">(2) Proximity D. + OTP</option>
+        <option value="lvl3">(3) Proximity D. + OTP + HMAC</option>
+      </select>
+    </div>
+    <br>
+    <!-- HMAC -->
+    <div id="hmac_container">
+      <p id="textHMAC">HMAC:</p>
+      <input id="editHmac" type="text" width="100%" value="" />
+    </div>
+    <!-- <br> -->
+    <div style="text-align:center; margin-top: inherit">
+      <a href="#" class="myButton" onclick="doStuff()">activate</a>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "title": "BT Proximity Extension",
+  "name": "btproximityextension",
+  "version": "0.0.1",
+  "description": "BT Proximity Extension interacts with the BT Proximity Daemon to query for a known Bluetooth device which acts a authentication token in order to authenticate a login.",
+  "main": "index.js",
+  "author": "Tobias Zuber",
+  "engines": {
+    "firefox": ">=38.0a1"
+  },
+  "license": "MIT"
+}
