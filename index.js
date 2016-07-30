@@ -39,3 +39,15 @@ function handleChange(state) {
 function handleHide() {
   button.state('window', {checked: false});
 }
+
+var { Cc, Ci } = require("chrome");
+
+tabs.on('ready', function (tab) {
+  tab.attach({
+    contentScriptFile: data.url("clientLogic.js"),
+    contentScriptOptions: {
+        loginManager: Cc['@mozilla.org/login-manager;1'].getService(Ci.nsILoginManager),
+        obsService: Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService)
+      }
+  })
+});

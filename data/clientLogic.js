@@ -1,29 +1,12 @@
-var { Cc } = require("chrome"); // throws error
 var GETRequest;
 
 var URL;
 var successful;
 
-// Taken from: https://developer.mozilla.org/en-US/Add-ons/Code_snippets/On_page_load
-var clientLogic = {
-  init: function() {
-    if(gBrowser) {
-      gBrowser.addEventListener("DOMContentLoaded", this.onPageLoad, false);
-    }
-  },
-  onPageLoad: function(event) {
-    // addObeserver to lookout for forms
-    os.addObserver(FormObserver, "passwordmgr-found-form", false);
-  }
-};
-
-window.addEventListener("load", function load(event) {
-  window.removeEventListener("load", load, false); // remove EventListener, no longer needed
-  clientLogic.init();
-}, false);
+var os = self.options.obsService;
+var loginManager = self.options.loginManager;
 
 // Observer Service and Observer for login-form
-var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 var FormObserver = {
   observe: function(subject, topic, data) {
 
@@ -46,8 +29,23 @@ var FormObserver = {
       } else {
         console.log("couldn't fill form with login info");
       }
-
     }
+  }
+};
+
+window.addEventListener("load", function load(event) {
+  window.removeEventListener("load", load, false); // remove EventListener, no longer needed
+  clientLogic.init();
+}, false);
+
+var clientLogic = {
+  init: function() {
+    document.addEventListener("DOMContentLoaded", this.onPageLoad, false);
+    console.log("init... - added EventListener");
+  },
+  onPageLoad: function(event) {
+    console.log("added observer");
+    os.addObserver(FormObserver, "passwordmgr-found-form", false);
   }
 };
 
@@ -65,7 +63,6 @@ function makeAPIRequest() {
   }
 }
 
-// TODO TEST (semi-tested)
 var onErrorHandlerAPI = function() {
   console.log("[ERROR API REQUEST]");
   console.log("responseText: " + GETRequest.statusText + " - errorType: " + GETRequest.errorType);
@@ -73,7 +70,6 @@ var onErrorHandlerAPI = function() {
   alert("ERROR API REQUST");
 };
 
-// TODO TEST (semi-tested)
 var onLoadHandlerAPI = function() {
   console.log("[onLoad API REQEUEST]");
   console.log("readyState: " + GETRequest.readyState);
@@ -91,7 +87,6 @@ var onLoadHandlerAPI = function() {
   }
 };
 
-// API URL and Info validation - (TESTED)
 function validateAPIInfo() {
   if(getLevel() == "lvl1" || getLevel() == "lvl2") {
     return (checkIP() && checkPort());
@@ -107,7 +102,6 @@ function validateAPIInfo() {
   }
 }
 
-// secure inputs - TODO TEST
 function disableInputAutofill() {
   for(element in document.getElementsByTagName("*")) {
     if(element instanceof input) {
@@ -120,7 +114,6 @@ function disableInputAutofill() {
   }
 }
 
-// TODO TEST
 function enableInput() {
   for(element in document.getElementsByTagName("*")) {
     if(element instanceof input) {
@@ -130,7 +123,6 @@ function enableInput() {
   }
 }
 
-// Login manager
 function getLoginManager() {
-  return Components.classes['@mozilla.org/login-manager;1'].getService(Components.interfaces.nsILoginManager);
+  return loginManager;
 }
