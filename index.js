@@ -9,7 +9,8 @@
 
 var { ToggleButton } = require("sdk/ui/button/toggle");
 var panels = require("sdk/panel");
-var self = require("sdk/self");
+var data = require("sdk/self").data;
+var tabs = require("sdk/tabs");
 
 var button = ToggleButton({
   id: "toogle-button",
@@ -23,7 +24,7 @@ var button = ToggleButton({
 });
 
 var panel = panels.Panel({
-  contentURL: self.data.url("panel.html"),
+  contentURL: data.url("panel.html"),
   onHide: handleHide
 })
 
