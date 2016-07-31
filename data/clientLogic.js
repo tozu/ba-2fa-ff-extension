@@ -3,51 +3,11 @@ var GETRequest;
 var URL;
 var successful;
 
-var os = self.options.obsService;
-var loginManager = self.options.loginManager;
-
-// Observer Service and Observer for login-form
-var FormObserver = {
-  observe: function(subject, topic, data) {
-
-    if(topic == "passwordmgr-found-form") {
-      console.log("++++++++++ FOUND FORM! ++++++++++");
-      console.log("data: " + data);
-      disableInputAutofill();
-      if(validateAPIInfo()) {
-          makeAPIRequest();
-      } else {
-        alert("Couldn't validate API URL and required information");
-      }
-
-      if(successful) {
-        getLoginManager().fillForm(subject);
-        console.log("filled form with login info");
-
-        enableInput(); // re-enable Inputs
-        alert("filled form with login info and re-enabled Input");
-      } else {
-        console.log("couldn't fill form with login info");
-      }
-    }
-  }
-};
-
-window.addEventListener("load", function load(event) {
-  window.removeEventListener("load", load, false); // remove EventListener, no longer needed
-  clientLogic.init();
+window.addEventListener("load", function(event) {
+  self.port.emit("init-observer", "bla");
 }, false);
 
-var clientLogic = {
-  init: function() {
-    document.addEventListener("DOMContentLoaded", this.onPageLoad, false);
-    console.log("init... - added EventListener");
-  },
-  onPageLoad: function(event) {
-    console.log("added observer");
-    os.addObserver(FormObserver, "passwordmgr-found-form", false);
-  }
-};
+self.port.on("make-API-request", makeAPIRequest); // TODO does it work? need to call specifically
 
 // API/REST Call - TESTED
 function makeAPIRequest() {

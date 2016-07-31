@@ -41,13 +41,60 @@ function handleHide() {
 }
 
 var { Cc, Ci } = require("chrome");
+var obsService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+
 
 tabs.on('ready', function (tab) {
-  tab.attach({
+  var worker = tab.attach({
     contentScriptFile: data.url("clientLogic.js"),
-    contentScriptOptions: {
-        loginManager: Cc['@mozilla.org/login-manager;1'].getService(Ci.nsILoginManager),
-        obsService: Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService)
-      }
-  })
+  });
+  worker.port.on("init-observer", function(message) {
+    console.log("obs for url: " + tab.url);
+    initObserver();
+  });
 });
+
+var Observer;
+
+function initObserver() {
+  Observer = new myObserver();
+}
+
+// Observer Service and Observer for login-form
+function myObserver() {
+  console.log("going to register observer");
+  this.register();
+}
+myObserver.prototype = {
+  observe: function(subject, topic, data) {
+    if(topic == "passwordmgr-found-form") {
+      console.log("++++++++++ FOUND FORM! ++++++++++");
+      console.log("data: " + data);
+      disableInputAutofill();
+      if(validateAPIInfo()) {
+          makeAPIRequest();
+
+      } else {
+        alert("Couldn't validate API URL and required information");
+      }
+
+      if(successful) {
+        getLoginManager().fillForm(subject);
+        console.log("filled form with login info");
+
+        enableInput(); // re-enable Inputs
+        alert("filled form with login info and re-enabled Input");
+      } else {
+        console.log("couldn't fill form with login info");
+      }
+    }
+  },
+  register: function() {
+    obsService.addObserver(this, "passwordmgr-found-form", false);
+    console.log("registered observer");
+  },
+  unregister: function() {
+    obsService.removeObserver(this, "passwordmgr-found-form");
+    console.log("UN-registered observer");
+  }
+};
