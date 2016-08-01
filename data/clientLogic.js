@@ -1,15 +1,27 @@
 var GETRequest;
-
 var URL;
-var successful;
 
 window.addEventListener("load", function(event) {
-  self.port.emit("init-observer", "bla");
+  // makePWDInputCheck
+  var ary = [];
+  var inputs = document.getElementsByTagName("input");
+  for (var i=0; i<inputs.length; i++) {
+    if (inputs[i].getAttribute("type") === "password") {
+      ary.push(inputs[i]);
+    }
+  }
+
+  console.log("no. of inputs: " + ary.length);
+  if(ary.length >= 1) {
+    self.port.emit("pwdinput", ary.length);
+  }
+
 }, false);
 
-self.port.on("make-API-request", makeAPIRequest); // TODO does it work? need to call specifically
+self.port.on("make-API-request", makeAPIRequest);
 
 // API/REST Call - TESTED
+                                                                            // TODO receive info
 function makeAPIRequest() {
   if(!GETRequest) {
     GETRequest = new XMLHttpRequest();
@@ -25,42 +37,41 @@ function makeAPIRequest() {
 
 var onErrorHandlerAPI = function() {
   console.log("[ERROR API REQUEST]");
+  console.log("...ups sth. went wrong");
   console.log("responseText: " + GETRequest.statusText + " - errorType: " + GETRequest.errorType);
-  successful = false;
-  alert("ERROR API REQUST");
+
+                                                                          // TODO send result
+  let result = { success: false, formInput: null };
+  self.port.emit("success", result);
 };
 
 var onLoadHandlerAPI = function() {
-  console.log("[onLoad API REQEUEST]");
-  console.log("readyState: " + GETRequest.readyState);
-
   if(GETRequest.readyState == 4) {
-    console.log(GETRequest.responseText);
-    console.log("(1. Try) response headers: \n" + GETRequest.getAllResponseHeaders());
+    var result = { success: false, formInput: null };
+    if(GETRequest.status == 200) {
+      console.log("All response headers: \n\n" + GETRequest.getAllResponseHeaders() + "\n");
 
-    console.log("[CHECK on HTTP Headers]");
-    for (var headerName in response.headers) {
-      console.log(headerName + " : " + response.headers[headerName]);
-      // TODO read header - check on "btFound" header
+      console.log("[CHECK on HTTP Headers]");
+      for (var headerName in response.headers) {
+                                                                          // TODO read header
+        console.log(headerName + " : " + response.headers[headerName]);
+        if(headerName == "foundBT") {
+          if(headerResponse) {
+                                                                          // TODO send result.success = true and input fields
+          } else {
+                                                                          // TODO send result.success = false
+          }
+          break;
+        }
+      }
+      self.port.emit("success", result);
+    } else {
+      console.log("...ups sth. went wrong");
+      console.log("error code: " + GETRequest.status + " - request URL: " + URL);
+      self.port.emit("success", result);
     }
-    successful = true;
   }
 };
-
-function validateAPIInfo() {
-  if(getLevel() == "lvl1" || getLevel() == "lvl2") {
-    return (checkIP() && checkPort());
-  } else if(getLevel() == "lvl3") {
-    if(getHMAC().length != 0) {
-      return (checkIP() && checkPort());
-    } else {
-      console.log("HMAC needs to be filled");
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
 
 function disableInputAutofill() {
   for(element in document.getElementsByTagName("*")) {
@@ -81,8 +92,4 @@ function enableInput() {
       console.log("element enabled!");
     }
   }
-}
-
-function getLoginManager() {
-  return loginManager;
 }

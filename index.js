@@ -1,3 +1,4 @@
+import ( validateAPIInfo, getLevel, getHMAC ) from './data/controls';
 /*
   TODO:
   [X]  HTTPS GET Request
@@ -40,61 +41,39 @@ function handleHide() {
   button.state('window', {checked: false});
 }
 
-var { Cc, Ci } = require("chrome");
-var obsService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-
+var { Cc, Ci } = require('chrome');
+var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
 tabs.on('ready', function (tab) {
   var worker = tab.attach({
     contentScriptFile: data.url("clientLogic.js"),
   });
-  worker.port.on("init-observer", function(message) {
-    console.log("obs for url: " + tab.url);
-    initObserver();
-  });
-});
 
-var Observer;
-
-function initObserver() {
-  Observer = new myObserver();
-}
-
-// Observer Service and Observer for login-form
-function myObserver() {
-  console.log("going to register observer");
-  this.register();
-}
-myObserver.prototype = {
-  observe: function(subject, topic, data) {
-    if(topic == "passwordmgr-found-form") {
-      console.log("++++++++++ FOUND FORM! ++++++++++");
-      console.log("data: " + data);
-      disableInputAutofill();
-      if(validateAPIInfo()) {
-          makeAPIRequest();
-
+  // received no. of input
+  worker.port.on("pwdinput", function(noInput) {
+    if(noInput >= 1) {
+      console.log("going to make API request");
+      if(validateAPIInfo()) {                                 // TODO call validateAPIInfo
+        console.log("could call function/validated");
+        let info = {url: createURL(), level: getLevel(), hmac: getHMAC()};
+        worker.port.emit("make-API-request", info);
       } else {
-        alert("Couldn't validate API URL and required information");
-      }
-
-      if(successful) {
-        getLoginManager().fillForm(subject);
-        console.log("filled form with login info");
-
-        enableInput(); // re-enable Inputs
-        alert("filled form with login info and re-enabled Input");
-      } else {
-        console.log("couldn't fill form with login info");
+        // console.log("validation failed");
+        alert("Could NOT validate URL, Port (and HMAC)!");
       }
     }
-  },
-  register: function() {
-    obsService.addObserver(this, "passwordmgr-found-form", false);
-    console.log("registered observer");
-  },
-  unregister: function() {
-    obsService.removeObserver(this, "passwordmgr-found-form");
-    console.log("UN-registered observer");
-  }
-};
+  });
+
+  // received result and inputs
+  worker.port.on("success", function(result) {
+    if(result.success) {
+      enableInput();                                          // TODO call enableInput
+      loginManager.fillForm(result.formInput);
+      /*
+        boolean fillForm(in nsIDOMHTMLFormElement aForm);
+      */
+    } else {
+      alert("No authenticated BT Token found!\nAccess denied!");
+    }
+  });
+});

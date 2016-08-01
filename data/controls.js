@@ -1,3 +1,4 @@
+console.log("controls.js loaded");
 // IP
 function getIP() {
   return document.getElementById("editIP").value;
@@ -100,5 +101,20 @@ function checkPort() {
     } else {
       return false;
     }
+  }
+}
+
+function validateAPIInfo() {
+  if(getLevel() == "lvl1" || getLevel() == "lvl2") {
+    return (checkIP() && checkPort());
+  } else if(getLevel() == "lvl3") {
+    if(getHMAC().length != 0) {
+      return (checkIP() && checkPort());
+    } else {
+      console.log("HMAC needs to be filled");
+      return false;
+    }
+  } else {
+    return false;
   }
 }
