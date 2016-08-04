@@ -2,7 +2,7 @@ var GETRequest;
 var URL;
 
 window.addEventListener("load", function(event) {
-  // makePWDInputCheck
+
   var ary = [];
   var inputs = document.getElementsByTagName("input");
   for (var i=0; i<inputs.length; i++) {
@@ -11,29 +11,35 @@ window.addEventListener("load", function(event) {
     }
   }
 
-  console.log("no. of inputs: " + ary.length);
   if(ary.length >= 1) {
-    self.port.emit("pwdinput", ary.length);
+    console.log("(cL) found Input");
+    self.port.emit("verify");
+    console.log("(cL -> index) verify");
   }
 
 }, false);
 
-self.port.on("make-API-request", makeAPIRequest);
-
 // API/REST Call - TESTED
-                                                                            // TODO receive info
-function makeAPIRequest() {
+self.port.on("make-API-request", function(url) {
+  console.log("(cL) - make-API-request");
+  makeApiRequest(url);
+});
+
+function makeApiRequest(url) {
+  console.log("make api request");
+  console.log("url: " + url);
+
   if(!GETRequest) {
     GETRequest = new XMLHttpRequest();
   }
   if(GETRequest) {
     console.log("[made API Request]");
-    GETRequest.open('GET', URL);
+    GETRequest.open('GET', url);
     GETRequest.addEventListener("load", onLoadHandlerAPI);
     GETRequest.addEventListener("error", onErrorHandlerAPI);
     GETRequest.send();
   }
-}
+};
 
 var onErrorHandlerAPI = function() {
   console.log("[ERROR API REQUEST]");

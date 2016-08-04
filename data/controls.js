@@ -1,4 +1,3 @@
-console.log("controls.js loaded");
 // IP
 function getIP() {
   return document.getElementById("editIP").value;
@@ -66,6 +65,7 @@ function createURL() {
   console.log("[create URL]: " + url);
   return url;
 }
+
 // HMAC
 function getHMAC() {
   return document.getElementById("editHmac").value;
@@ -104,17 +104,49 @@ function checkPort() {
   }
 }
 
+
+self.port.on("validate", function() {
+  console.log("(panel) validate");
+  validateAPIInfo();
+});
+
+// TODO url is not being sent back to "index.js"
+// SHOULD have a 'addon' global object, which allows to send msgs
+// possible fix: http://stackoverflow.com/questions/26487451/addon-is-undefined-in-panel-firefox-addon
+
 function validateAPIInfo() {
+  console.log("[validateAPIInfo]");
   if(getLevel() == "lvl1" || getLevel() == "lvl2") {
-    return (checkIP() && checkPort());
+    if(checkIP() && checkPort()) {
+      console.log(" - SUCCESS");
+      self.port.emit("validated", createURL());
+      console.log("(panel -> index) - validated");
+    } else {
+      console.log(" - FAIL")
+      self.port.emit("failed", "wrong ip/port");
+      console.log("(panel -> index) - validated");
+    }
   } else if(getLevel() == "lvl3") {
     if(getHMAC().length != 0) {
-      return (checkIP() && checkPort());
+      if(checkIP() && checkPort()) {
+        console.log(" - SUCCESS")
+        self.port.emit("validated", createURL());
+        console.log("(panel -> index) - validated");
+      } else {
+        console.log(" - FAIL")
+        self.port.emit("failed", "wrong ip/port");
+        console.log("(panel -> index) - validated");
+      }
     } else {
-      console.log("HMAC needs to be filled");
-      return false;
+      console.log(" - FAIL")
+      self.port.emit("failed", "HMAC missing");
+      console.log("(panel -> index) - validated");
+      // return false;
     }
   } else {
-    return false;
+    console.log(" - FAIL")
+    self.port.emit("failed", "sth. went wrong! :o");
+    console.log("(panel -> index) - validated");
+    // return false;
   }
 }

@@ -1,4 +1,3 @@
-import ( validateAPIInfo, getLevel, getHMAC ) from './data/controls';
 /*
   TODO:
   [X]  HTTPS GET Request
@@ -26,6 +25,7 @@ var button = ToggleButton({
 
 var panel = panels.Panel({
   contentURL: data.url("panel.html"),
+  contentScriptFile: require("sdk/self").data.url("controls.js"),
   onHide: handleHide
 })
 
@@ -46,34 +46,24 @@ var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginMana
 
 tabs.on('ready', function (tab) {
   var worker = tab.attach({
-    contentScriptFile: data.url("clientLogic.js"),
+    contentScriptFile: data.url("clientLogic.js")
   });
 
-  // received no. of input
-  worker.port.on("pwdinput", function(noInput) {
-    if(noInput >= 1) {
-      console.log("going to make API request");
-      if(validateAPIInfo()) {                                 // TODO call validateAPIInfo
-        console.log("could call function/validated");
-        let info = {url: createURL(), level: getLevel(), hmac: getHMAC()};
-        worker.port.emit("make-API-request", info);
-      } else {
-        // console.log("validation failed");
-        alert("Could NOT validate URL, Port (and HMAC)!");
-      }
-    }
+  worker.port.on("verify", function() {
+    console.log("(index) - verify");
+    panel.port.emit("validate");
+    console.log("(index -> panel) - validate");
   });
 
-  // received result and inputs
-  worker.port.on("success", function(result) {
-    if(result.success) {
-      enableInput();                                          // TODO call enableInput
-      loginManager.fillForm(result.formInput);
-      /*
-        boolean fillForm(in nsIDOMHTMLFormElement aForm);
-      */
-    } else {
-      alert("No authenticated BT Token found!\nAccess denied!");
-    }
+  worker.port.on("validated", function sendAPIRequestTo(url) {
+    console.log("(index) - validated");
+    worker.port.emit("make-API-request", url);
+    console.log("(index -> cL) - validate");
   });
+
+  worker.port.on("failed", function(reason) {
+    console.log("(index) failed" + "\nReason: " + reason);
+    alert("FAILED!")
+  });
+
 });
