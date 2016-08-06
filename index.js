@@ -1,10 +1,9 @@
 /*
   TODO:
   [X]  HTTPS GET Request
-  [ ]  read response headers
+  [X]  read response headers
         search for "found BT"
   [ ]  "HOOK" mozilla password/login manager
-
 */
 
 var { ToggleButton } = require("sdk/ui/button/toggle");
@@ -25,7 +24,7 @@ var button = ToggleButton({
 
 var panel = panels.Panel({
   contentURL: data.url("panel.html"),
-  contentScriptFile: require("sdk/self").data.url("controls.js"),
+  contentScriptFile: data.url("controls.js"),
   onHide: handleHide
 })
 
@@ -41,29 +40,43 @@ function handleHide() {
   button.state('window', {checked: false});
 }
 
-var { Cc, Ci } = require('chrome');
-var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+panel.port.on("validated", function sendAPIRequestTo(url) {
+  tabWorker.port.emit("make-API-request", url);
+});
 
+panel.port.on("failed", function(reason) {
+  var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+  prompts.alert(null, "BT Proximity as 2nd Factor - Add-on", "Could NOT enforce 2nd Factor authentication"
+    + "\nReason: " + reason);
+});
+
+var tabWorker;
 tabs.on('ready', function (tab) {
-  var worker = tab.attach({
+  tabWorker = tab.attach({
     contentScriptFile: data.url("clientLogic.js")
   });
 
-  worker.port.on("verify", function() {
-    console.log("(index) - verify");
+  tabWorker.port.on("verify", function() {
     panel.port.emit("validate");
-    console.log("(index -> panel) - validate");
   });
 
-  worker.port.on("validated", function sendAPIRequestTo(url) {
-    console.log("(index) - validated");
-    worker.port.emit("make-API-request", url);
-    console.log("(index -> cL) - validate");
+  tabWorker.port.on("failed", function(reason) {
+    var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    prompts.alert(null, "BT Proximity as 2nd Factor - Add-on", "Could NOT enforce 2nd Factor authentication"
+      + "\nReason: " + reason);
   });
 
-  worker.port.on("failed", function(reason) {
-    console.log("(index) failed" + "\nReason: " + reason);
-    alert("FAILED!")
+  tabWorker.port.on("success", function(inputs) {
+    console.log("-- success" + "- inputs: " + inputs);
+    console.log("len: " + inputs.length);
+
+    var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    prompts.alert(null, "BT Proximity as 2nd Factor - Add-on", "SUCCESS MTHFRKR!");
   });
 
 });
+
+// TODO loginManager
+
+var { Cc, Ci } = require('chrome');
+var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);

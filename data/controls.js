@@ -62,7 +62,7 @@ function createURL() {
     url += url + refHMAC + getHMAC();
   }
 
-  console.log("[create URL]: " + url);
+  // console.log("[create URL]: " + url);
   return url;
 }
 
@@ -104,49 +104,35 @@ function checkPort() {
   }
 }
 
-
-self.port.on("validate", function() {
-  console.log("(panel) validate");
-  validateAPIInfo();
-});
-
-// TODO url is not being sent back to "index.js"
-// SHOULD have a 'addon' global object, which allows to send msgs
-// possible fix: http://stackoverflow.com/questions/26487451/addon-is-undefined-in-panel-firefox-addon
-
 function validateAPIInfo() {
   console.log("[validateAPIInfo]");
   if(getLevel() == "lvl1" || getLevel() == "lvl2") {
     if(checkIP() && checkPort()) {
       console.log(" - SUCCESS");
       self.port.emit("validated", createURL());
-      console.log("(panel -> index) - validated");
     } else {
       console.log(" - FAIL")
       self.port.emit("failed", "wrong ip/port");
-      console.log("(panel -> index) - validated");
     }
   } else if(getLevel() == "lvl3") {
     if(getHMAC().length != 0) {
       if(checkIP() && checkPort()) {
         console.log(" - SUCCESS")
         self.port.emit("validated", createURL());
-        console.log("(panel -> index) - validated");
       } else {
         console.log(" - FAIL")
         self.port.emit("failed", "wrong ip/port");
-        console.log("(panel -> index) - validated");
       }
     } else {
       console.log(" - FAIL")
       self.port.emit("failed", "HMAC missing");
-      console.log("(panel -> index) - validated");
-      // return false;
     }
   } else {
     console.log(" - FAIL")
     self.port.emit("failed", "sth. went wrong! :o");
-    console.log("(panel -> index) - validated");
-    // return false;
   }
 }
+
+self.port.on("validate", function() {
+  validateAPIInfo();
+});

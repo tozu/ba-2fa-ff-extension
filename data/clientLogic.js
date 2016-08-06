@@ -1,39 +1,32 @@
 var GETRequest;
 var URL;
 
+var pwdInputs;
+
 window.addEventListener("load", function(event) {
 
-  var ary = [];
+  pwdInputs = [];
   var inputs = document.getElementsByTagName("input");
   for (var i=0; i<inputs.length; i++) {
     if (inputs[i].getAttribute("type") === "password") {
-      ary.push(inputs[i]);
+      pwdInputs.push(inputs[i]);
     }
   }
 
-  if(ary.length >= 1) {
-    console.log("(cL) found Input");
+  if(pwdInputs.length >= 1) {
     self.port.emit("verify");
-    console.log("(cL -> index) verify");
   }
 
 }, false);
 
 // API/REST Call - TESTED
-self.port.on("make-API-request", function(url) {
-  console.log("(cL) - make-API-request");
-  makeApiRequest(url);
-});
-
 function makeApiRequest(url) {
-  console.log("make api request");
-  console.log("url: " + url);
-
   if(!GETRequest) {
     GETRequest = new XMLHttpRequest();
   }
   if(GETRequest) {
-    console.log("[made API Request]");
+    console.log("[API Request]");
+    console.log("url: " + url);
     GETRequest.open('GET', url);
     GETRequest.addEventListener("load", onLoadHandlerAPI);
     GETRequest.addEventListener("error", onErrorHandlerAPI);
@@ -42,42 +35,46 @@ function makeApiRequest(url) {
 };
 
 var onErrorHandlerAPI = function() {
-  console.log("[ERROR API REQUEST]");
-  console.log("...ups sth. went wrong");
-  console.log("responseText: " + GETRequest.statusText + " - errorType: " + GETRequest.errorType);
+  console.log("[API Request - ERROR]");
+  console.log("- readyState: " + GETRequest.readyState);
+  console.log("- status: " + GETRequest.status);
+  console.log("- statusText: " + GETRequest.statusText);
+  console.log("- responseText: " + GETRequest.responseText);
+  console.log("- withCredentials: " + GETRequest.withCredentials);
 
-                                                                          // TODO send result
-  let result = { success: false, formInput: null };
-  self.port.emit("success", result);
+  self.port.emit("failed", "API Call failed");
 };
 
 var onLoadHandlerAPI = function() {
+  console.log("[API Request - LOAD]");
   if(GETRequest.readyState == 4) {
-    var result = { success: false, formInput: null };
     if(GETRequest.status == 200) {
-      console.log("All response headers: \n\n" + GETRequest.getAllResponseHeaders() + "\n");
 
       console.log("[CHECK on HTTP Headers]");
-      for (var headerName in response.headers) {
-                                                                          // TODO read header
-        console.log(headerName + " : " + response.headers[headerName]);
-        if(headerName == "foundBT") {
-          if(headerResponse) {
-                                                                          // TODO send result.success = true and input fields
-          } else {
-                                                                          // TODO send result.success = false
-          }
-          break;
-        }
+      // read header
+      if(GETRequest.getResponseHeader("foundBT") == "true") {
+        self.port.emit("success", pwdInputs);
+        // TODO forward inputs
+      } else if(GETRequest.getResponseHeader("foundBT") == "false") {
+        self.port.on("failed", "NO Auth. BT Token found!");
+      } else {
+        self.port.on("failed", "NO Auth. BT Token found!");
       }
-      self.port.emit("success", result);
+
+    } else {
+        // response not 200
+        self.port.on("failed", "Connection to Daemon failed!\nStatus: " + GETRequest.status);
+      }
     } else {
       console.log("...ups sth. went wrong");
       console.log("error code: " + GETRequest.status + " - request URL: " + URL);
-      self.port.emit("success", result);
+      self.port.on("failed", "...sth. went wrong");
     }
-  }
 };
+
+self.port.on("make-API-request", function(url) {
+  makeApiRequest(url);
+});
 
 function disableInputAutofill() {
   for(element in document.getElementsByTagName("*")) {
