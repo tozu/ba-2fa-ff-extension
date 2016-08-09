@@ -50,6 +50,10 @@ panel.port.on("failed", function(reason) {
     + "\nReason: " + reason);
 });
 
+// commented out since Mozilla removed the fillForms function
+// var { Cc, Ci } = require('chrome');
+// var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
 var tabWorker;
 tabs.on('ready', function (tab) {
   tabWorker = tab.attach({
@@ -65,18 +69,22 @@ tabs.on('ready', function (tab) {
     prompts.alert(null, "BT Proximity as 2nd Factor - Add-on", "Could NOT enforce 2nd Factor authentication"
       + "\nReason: " + reason);
   });
+/*
+  // commented out since Mozilla removed the fillForms function
 
-  tabWorker.port.on("success", function(inputs) {
-    console.log("-- success" + "- inputs: " + inputs);
-    console.log("len: " + inputs.length);
+  tabWorker.port.on("success", function(forms) {
+    // console.log(Object.keys(loginManager));
+    // console.log("cnt: " + loginManager.countLogins());
+    // for(var i = 0; i < forms.length; i++) {
+    //     console.log("need to call loginManager to fill-in passwords");
+    //     loginManager.fillForm(forms[i]);                                         // TODO loginManager
+    //     console.log("loginManager magic! :o");
+    // }
 
     var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
     prompts.alert(null, "BT Proximity as 2nd Factor - Add-on", "SUCCESS MTHFRKR!");
+
   });
+*/
 
 });
-
-// TODO loginManager
-
-var { Cc, Ci } = require('chrome');
-var loginManager = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
